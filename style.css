@@ -1,0 +1,551 @@
+:root {
+  --accent: #bc00ff;
+  --bg-dark: rgba(0, 0, 0, 0.85);
+  --overlay: rgba(0, 0, 0, 0.9);
+}
+
+body,
+html {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: #000;
+  color: #fff;
+  font-family: "Oswald", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* ФОН */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: -1;
+}
+
+/* Дефолтный фон (когда музыка НЕ играет) */
+#bg-main {
+  background-image:
+    linear-gradient(var(--overlay), var(--overlay)),
+    url("lamentingmalicewallpaper.jpeg");
+  opacity: 1;
+  /* Анимация срабатывает, когда класс is-playing убирается */
+  animation: glitch-appear 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* Альтернативный фон (когда музыка играет) */
+#bg-hover {
+  background-image:
+    linear-gradient(var(--overlay), var(--overlay)),
+    url("lmwallpaperbackground.jpeg");
+  opacity: 0;
+}
+
+/* --- ЛОГИКА ПЕРЕКЛЮЧЕНИЯ --- */
+
+/* Когда музыка играет: */
+body.is-playing #bg-main {
+  opacity: 0;
+  animation: none; /* Сбрасываем анимацию */
+}
+
+body.is-playing #bg-hover {
+  opacity: 1;
+  /* Запускаем глитч при появлении */
+  animation: glitch-appear 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* --- САМА АНИМАЦИЯ ГЛИТЧА --- */
+@keyframes glitch-appear {
+  0% {
+    opacity: 0;
+    transform: scale(1.1) translateX(-5%);
+    clip-path: inset(50% 0 50% 0);
+    filter: hue-rotate(90deg) contrast(2);
+  }
+  10% {
+    opacity: 1;
+    transform: translateX(5%);
+    clip-path: inset(10% 0 80% 0);
+    filter: invert(1);
+  }
+  20% {
+    transform: translateX(-5%);
+    clip-path: inset(80% 0 5% 0);
+    filter: none;
+  }
+  30% {
+    transform: translateX(2%);
+    clip-path: inset(20% 0 50% 0);
+    filter: saturate(5);
+  }
+  40% {
+    transform: translateX(-2%);
+    clip-path: inset(0 0 0 0);
+  }
+  50% {
+    transform: translateX(1%);
+    clip-path: inset(50% 0 50% 0);
+  }
+  60% {
+    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+    clip-path: inset(0 0 0 0);
+    filter: none;
+  }
+}
+
+/* ===================== */
+/* HEADER */
+/* ===================== */
+
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: var(--bg-dark);
+  padding: 20px 20px; /* Уменьшили отступы для мобилок */
+  border-bottom: 1px solid var(--accent);
+  z-index: 100;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Лого слева, ссылки справа */
+  box-sizing: border-box;
+}
+
+header a {
+  color: white;
+  text-decoration: none;
+  margin: 0 15px;
+  font-weight: bold;
+  font-size: 14px;
+  letter-spacing: 1px;
+  transition: 0.2s;
+}
+
+header a:hover {
+  color: var(--accent);
+}
+
+/* CONTENT */
+
+.content {
+  box-sizing: border-box;
+  padding: 100px 50px 140px;
+  max-width: 800px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.author {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.song-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  flex-grow: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) transparent;
+}
+
+.song-item {
+  padding: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.song-item:hover {
+  background: rgba(188, 0, 255, 0.2);
+  padding-left: 30px;
+  color: var(--accent);
+}
+
+/* PLAYER */
+
+.player-container {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: rgba(0, 0, 0, 0.8); /* Сделал чуть темнее для читаемости */
+  border: 1px solid var(--accent);
+  padding: 15px 20px;
+  width: 420px;
+  z-index: 1000;
+
+  /* Эффекты скрытия */
+  opacity: 0;
+  pointer-events: none; /* Чтобы нельзя было нажать на невидимый плеер */
+  transform: translateY(20px); /* Смещаем чуть вниз */
+  transition: all 0.5s ease; /* Плавная анимация появления */
+}
+.player-container.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+@media (max-width: 768px) {
+  .player-container {
+    width: 100% !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    transform: translateY(
+      100%
+    ); /* На мобилках выезжает полностью снизу за экран */
+  }
+
+  .player-container.active {
+    transform: translateY(0);
+  }
+}
+
+.track-info {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.time-box {
+  font-size: 12px;
+  min-width: 90px;
+}
+
+.slider {
+  flex-grow: 1;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.volume {
+  width: 70px;
+  flex-grow: 0;
+}
+
+#play-pause-btn {
+  background: var(--accent);
+  border: none;
+  color: white;
+  padding: 6px 0;
+  width: 45px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  border-radius: 2px;
+  font-size: 1.2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#play-pause-btn:hover {
+  background: #fff;
+  color: #000;
+}
+
+/* --- ГЛУБОКАЯ ОПТИМИЗАЦИЯ ДЛЯ МОБИЛОК --- */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.8rem;
+    text-align: center;
+    margin: 10px 0;
+  }
+
+  .song-item {
+    padding: 12px 10px;
+    font-size: 16px;
+  }
+
+  /* Плеер на мобилках */
+  .player-container {
+    width: 100% !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    padding: 15px;
+    box-sizing: border-box;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    background: rgba(0, 0, 0, 0.95);
+  }
+
+  .controls-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .volume {
+    display: none;
+  }
+
+  .time-box {
+    min-width: fit-content;
+    font-size: 11px;
+  }
+
+  #play-pause-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .track-info {
+    font-size: 14px;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .bg-layer {
+    background-position: left center;
+    background-size: cover;
+  }
+  #bg-main,
+  #bg-hover {
+    background-position: 20% center;
+  }
+}
+
+/* ультра мелкие экраны */
+@media (max-height: 600px) {
+  h1 {
+    font-size: 1.4rem;
+  }
+  .content {
+    padding-top: 60px;
+  }
+}
+
+.header-logo {
+  position: absolute;
+  left: 0px;
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  pointer-events: none;
+}
+.links {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  header {
+    padding: 5px 15px;
+    justify-content: space-between;
+  }
+
+  .header-logo {
+    width: 60px;
+    height: 60px;
+    position: relative;
+    object-fit: contain;
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+
+  header a {
+    margin: 0 4px;
+    font-size: 12px;
+  }
+
+  .links {
+    max-width: 80%;
+    justify-content: center;
+    flex-wrap: nowrap;
+  }
+}
+
+/* ФЫВФЫВ */
+/* Обновленный контейнер контента */
+.content {
+  box-sizing: border-box;
+  padding: 100px 50px 140px;
+  max-width: 1200px; /* Увеличили ширину для двух колонок */
+  margin: 0 auto;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Оболочка для списка и текста */
+.main-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+  flex-grow: 1;
+  overflow: hidden; /* Запрещаем скролл всему контейнеру */
+  margin-top: 20px;
+}
+
+.song-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  flex: 1; /* Список занимает основное место */
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) transparent;
+}
+
+/* Правый блок с текстом */
+.sidebar {
+  display: flex;
+  flex-direction: row;
+  flex: 0 1 450px; /* Позволяем блоку сжиматься, если места мало, но не расти больше 450px */
+  min-width: 300px; /* Чтобы текст не превратился в узкую полоску */
+  height: 100%; /* Занимает всю высоту контейнера */
+}
+
+.divider {
+  width: 3px;
+  background: var(--accent);
+  margin-right: 30px;
+  flex-shrink: 0; /* Чтобы полоска не сжималась в 0 */
+}
+
+.manifesto {
+  font-weight: 700;
+  font-size: clamp(16px, 1.5vw, 24px);
+  line-height: 1.5;
+  color: white;
+  text-transform: none;
+  align-self: center; /* Центрируем текст по вертикали относительно списка песен */
+  margin: 0;
+  max-height: 90%;
+  overflow-y: hidden;
+  padding-right: 10px;
+}
+
+/* Добавим кастомный скроллбар для манифеста, если он появится */
+.manifesto::-webkit-scrollbar {
+  width: 4px;
+}
+.manifesto::-webkit-scrollbar-thumb {
+  background: var(--accent);
+}
+
+/* Адаптив для мобилок */
+@media (max-width: 768px) {
+  /* 1. Главный контейнер - запрещаем ему общий скролл, 
+     чтобы работал скролл внутри списка песен */
+  .content {
+    padding: 80px 15px 150px; /* Отступ сверху под шапку и снизу под плеер */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* 2. Общая обертка контента */
+  .main-layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* 3. СПИСОК ПЕСЕН - Возвращаем фиолетовый скролл сюда */
+  .song-list {
+    flex: 1 1 auto; /* занимает всё свободное */
+    overflow-y: auto;
+    padding-bottom: 0px;
+    border-bottom: 3px solid rgba(188, 0, 255, 0.5);
+  }
+
+  /* Настройка фиолетового скролла для Chrome/Safari/Edge */
+  .song-list::-webkit-scrollbar {
+    width: 4px;
+  }
+  .song-list::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 10px;
+  }
+
+  /* 4. САЙДБАР С ТЕКСТОМ - Убираем скролл */
+  .sidebar {
+    flex: 0 0 auto; /* Убираем фикс. высоту 90px, теперь высота зависит от текста */
+    height: auto; /* Растягивается под контент */
+    display: flex;
+    align-items: flex-start; /* Прижимаем к верху */
+    justify-content: center;
+    padding: 10px 0 5px 0; /* Уменьшили отступ сверху (было 6px, стало 10px для воздуха, но ближе визуально за счет удаления высоты) */
+    overflow: visible; /* Убираем скролл, текст виден полностью */
+  }
+
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .divider {
+    display: none;
+  }
+
+  .manifesto {
+    font-size: 11px;
+    line-height: 1.3; /* Чуть плотнее строки, чтобы было компактнее */
+    margin-bottom: 40px;
+    padding: 0 10px; /* Уменьшили боковые отступы, чтобы влезало больше текста в строку */
+    text-align: center;
+    white-space: normal; /* Гарантируем перенос слов */
+  }
+}
+
+/* ВИЗУАЛ */
+#visualizer {
+  position: absolute;
+  bottom: 100%; /* Приклеиваем к верху плеера */
+  left: 0;
+  width: 100%;
+  height: 80px; /* Высота прыгающих полосок */
+  background: transparent;
+  z-index: -1; /* Чтобы не перекрывал кнопки, если вдруг наедет */
+  pointer-events: none;
+  /* Легкая дымка снизу, чтобы сливалось с плеером */
+  -webkit-mask-image: linear-gradient(to top, black 20%, transparent 100%);
+  mask-image: linear-gradient(to top, black 20%, transparent 100%);
+}
+
+/* На мобильных можно сделать поменьше */
+@media (max-width: 768px) {
+  #visualizer {
+    height: 60px;
+  }
+}
